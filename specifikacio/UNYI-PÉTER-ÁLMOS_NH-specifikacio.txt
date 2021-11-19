@@ -1,0 +1,33 @@
+====================================================
+SPECIFIKÁCIÓ - UNYI PÉTER ÁLMOS - Hufmann-kódolás
+====================================================
+
+Rövid leírás:
+	A nagy házi feladatom egy parancssorból futtatható program, mely szövegfájlok tömörítését valósítja meg a Hufmann-algoritmus szerint.
+
+A program fő feladatai:
+	1.) Utasítások bekérése előre definiált argumentumokkal és általános kommunikáció a felhasználóval (a tömörítési hibaüzenetek és log kiírása)
+	2.) Fájlkezelés:
+		a.) tömörítetlen szövegfájl (.txt) beolvasása, majd tömörített fájl létrehozása (.hcf (=Hufmann coded file))
+		b.) tömörített fájl beolvasása (.hcf), majd visszaállított fájl létrehozása (.txt)
+
+	3.) Utasítások: 
+		a.) tömörítés iránya:
+			- betömörítés (argumentum: szövegfájl / begépelt szöveg (ezt a felhasználó szintén kiválaszthatja egy kapcsolóval), tömörített fájl helye és neve)
+			- visszaállítás (argumentum: betömörített fájl (.hcf), kimeneti fájl helye és neve)
+		b.) segítő felület megjelenítése (a parancsok szemléltetése és példák mutatása)
+	
+	4.) Példa futtatható parnacsokra:
+		a.) hufmann -if szoveg.txt tomoritett.hcf
+		b.) hufmann -is "Ezt kell tömöríteni" tomoritett.hcf
+		c.) hufmann -rf tomoritett.hcf -o kimeneti_szoveg.txt
+		d.) hufmann -rs tomoritett.hcf -o kiementi_szoveg.txt
+
+	5.) Flow:
+		1. scenario - betömörítés:
+			BE: irány kapcsoló, fájlból / begépelt szövegből olvasás kapcsoló, [tömöríteni kívánt fájl helye és neve (nem szükséges, ha begépelt szöveget tömörít), tömörített fájl helye és neve
+			KI: tömörített fájl
+
+		2. scenario - visszaállítás:
+			BE: irány kapcsoló, eredeti szövegfile / begépelt szöveg, tömörített fájl helye és neve, visszaállított fájl helye és neve
+			KI: visszaállított fájl

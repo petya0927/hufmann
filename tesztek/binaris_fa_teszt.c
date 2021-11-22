@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
 
 typedef struct Binfa {
     int szam;
+    struct Binfa *szulo;
     struct Binfa *jobb, *bal;
 } Binfa;
 
@@ -22,22 +25,6 @@ void rendezes(int *n, int meret){
             //s[i] = s_temp;
         }
     }
-}
-
-Binfa *uj_adatpont(Binfa *gyoker, int szam, int idx){
-    if (gyoker == NULL){
-        Binfa *uj = (Binfa*) malloc(sizeof(Binfa));
-        uj->szam = szam;
-        uj->bal = uj->jobb = NULL;
-        return uj;
-    }
-
-    if (idx == 1)
-        gyoker->jobb = uj_adatpont(gyoker->jobb, szam, idx);
-    else if (idx == 0)
-        gyoker->bal = uj_adatpont(gyoker->bal, szam, idx);
- 
-    return gyoker;
 }
 
 void sorban_kiir(Binfa *gyoker) {
@@ -62,29 +49,58 @@ void tomb_kiir(int *n, int meret){
     printf("\n");
 }
 
+Binfa *lefoglal(Binfa *gyoker, int szam){
+    Binfa *uj = (Binfa*) malloc(sizeof(Binfa));
+    uj->szam = szam;
+    uj->bal = uj->jobb = NULL;
+    return uj;
+}
+
+Binfa *uj_adatpont(Binfa *gyoker, int a, int b){
+    if (gyoker == NULL){
+        return lefoglal(gyoker, a);
+    }
+    gyoker->jobb = uj_adatpont(gyoker->jobb, a, b);
+    //gyoker->bal = lefoglal(gyoker->bal, b);
+    return gyoker;
+}
+
 Binfa *rekurziv_tomb_osszeg(int *n, int meret){
-    if (meret == 0){
+    if (meret == 1){
         Binfa *fa = NULL;
-        fa = uj_adatpont(fa, n[0], 0);
+        fa = lefoglal(fa, n[0]);
         return fa;
     }
+    
+    int *m = (int*) malloc(meret * sizeof(int));
+    memcpy(m, n, meret * sizeof(int));
 
-    tomb_kiir(n, meret);
     int osszeg = n[0] + n[1];
     n[1] = osszeg;
     tombelem_torol(n, 0, meret);
     meret -= 1;
     rendezes(n, meret);
+
     Binfa *r = rekurziv_tomb_osszeg(n, meret);
-    r = uj_adatpont(r, n[0], 0);
-    r = uj_adatpont(r, n[1], 1);
+    tomb_kiir(m, meret + 1);
+    r = uj_adatpont(r, m[1], m[0]);
     return r;
 }
 
 
 int main(void){
     char betuk[6] = {'a', 'b', 'c', 'd', 'e', '\0'};
-    int elofordulasok[5] = {5, 2, 1, 6, 2};
+    int elofordulasok[5] = {3, 9, 1, 0, 4};
+    int meret = 5;
     rendezes(elofordulasok, 5);
+    /*
+    Binfa *f = NULL;
+    for (int i = 0; i < 5; i++){
+        printf("%d", elofordulasok[i]);
+        f = uj_adatpont(f, elofordulasok[i]);
+    }
+    sorban_kiir(f);
+    free(f);
+    */
     sorban_kiir(rekurziv_tomb_osszeg(elofordulasok, 5));
 }

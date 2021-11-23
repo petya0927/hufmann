@@ -30,19 +30,20 @@ void sorban_kiir(BinFa *gyoker) {
         return;
     }
 
-    printf("balra\n");
-    sorban_kiir(gyoker->bal);     /* 1 */
     printf("%d\n", gyoker->adat);
+    printf("balra\n");
+    sorban_kiir(gyoker->bal);
     printf("jobbra\n");
-    sorban_kiir(gyoker->jobb);    /* 3 */
+    sorban_kiir(gyoker->jobb);
+    
 }
 
 int main(void) {
     BinFa *fa = NULL;
-    int szamok[10] = {5, 6, 2, 1, 9, 4, 7, 0, 3, 8};
-    for (int i = 0; i < 10; i++){
+    int szamok[3] = {5, 6, 2};
+    for (int i = 0; i < 3; i++){
         fa = beszur(fa, szamok[i]);
     }
 
-    sorban_kiir(fa);
+    sorban_kiir(fa->bal);
 }

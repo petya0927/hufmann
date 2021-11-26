@@ -94,59 +94,52 @@ Binfa *lefoglal(int szam){
     return uj;
 }
 
-bool level(Binfa *gyoker){
-    return gyoker->bal == NULL && gyoker->jobb == NULL;
-}
-
-Binfa *faban_van(Binfa *gyoker, int n){
+/*
+Binfa *uj_adatpont(Binfa *gyoker, int a, int b){
     if (gyoker == NULL)
-        return NULL;
+        return lefoglal(a);
 
-    if (gyoker->szam = n)
-        return gyoker;
+    gyoker->jobb = uj_adatpont(gyoker->jobb, a, b);
 
-    Binfa *b = faban_van(gyoker->bal, n);
-    if (b != NULL) return b;
-    Binfa *j = faban_van(gyoker->jobb, n);
-    return j;
-}
+    if (gyoker->jobb->bal == NULL && gyoker->jobb->jobb == NULL){
 
-Binfa *osszeg_keres(Binfa *gyoker, int osszeg, int a, int b, char ca, char cb){
-    printf("====================================\n");
-    printf("#ELOTTE:\n");
-    if (gyoker == NULL)
-        return NULL;
-
-    printf("#Vizsgalt:%d, level:%d, a:%d, ca:%c, b:%d, cb:%c\n", gyoker->szam, level(gyoker), a, b, ca, cb);
-    sorban_kiir(gyoker);
-
-    // akkor hívom ha levél és kétféle képpen tudok visszatérni, azonos az érték, vbagy nem azonos az érték
-    if (level(gyoker)){
-        printf("#LEVEL\n");
-        if (gyoker->szam == osszeg){
-            printf("#EGYENLO\n");
-            printf("#BEILLESZTES\n");
-            gyoker->jobb = lefoglal(a);
-            gyoker->jobb->betu = ca;
-            gyoker->bal = lefoglal(b);
-            gyoker->bal->betu = cb;
-            printf("UTANA:\n");
-            sorban_kiir(gyoker);
-            return gyoker;
-        }
-        else{
-            printf("#NEM EGYENLO");
-            return NULL;
-        }
+        gyoker->bal = lefoglal(b);
     }
 
-    else{
-        printf("#NEM LEVEL\n");
-        if (!osszeg_keres(gyoker->bal, osszeg, a, b, ca, cb)){
-            printf("#gyoker->bal = NULL\n");
-            if (!osszeg_keres(gyoker->jobb, osszeg, a, b, ca, cb))
-                return NULL;
-        }
+    return gyoker;
+}
+
+Binfa *rekurziv_tomb_osszeg(int *n, int meret){
+    if (meret == 1){
+        Binfa *fa = NULL;
+        fa = lefoglal(n[0]);
+        return fa;
+    }
+    
+    int *m = (int*) malloc(meret * sizeof(int));
+    memcpy(m, n, meret * sizeof(int));
+
+    int osszeg = n[0] + n[1];
+    n[1] = osszeg;
+    tombelem_torol(n, 0, meret);
+    meret -= 1;
+    rendezes(n, meret);
+
+    Binfa *r = rekurziv_tomb_osszeg(n, meret);
+    r = uj_adatpont(r, m[1], m[0]);
+    return r;
+}
+*/
+
+Binfa *uj_adatpont(Binfa *gyoker, int a, int b, char c){
+    if (gyoker == NULL)
+        return lefoglal(a);
+
+    gyoker->jobb = uj_adatpont(gyoker->jobb, a, b, c);
+
+    if (gyoker->jobb->bal == NULL && gyoker->jobb->jobb == NULL){
+        gyoker->bal = lefoglal(b);
+        gyoker->bal->betu = c;
     }
 
     return gyoker;
@@ -156,10 +149,10 @@ Binfa *rekurziv_tomb_osszeg(Gyakorisag *n, int meret){
     for (int i = 0; i < meret; i++)
         printf("%c%d ", n[i].betu, n[i].gyakorisag);
     printf("\n");
+
     if (meret == 1){
         Binfa *fa = NULL;
         fa = lefoglal(n[0].gyakorisag);
-        fa->betu = n[0].betu;
         return fa;
     }
     
@@ -174,25 +167,18 @@ Binfa *rekurziv_tomb_osszeg(Gyakorisag *n, int meret){
     n = rendezes_struct(n, meret);
 
     Binfa *r = rekurziv_tomb_osszeg(n, meret);
-    r = osszeg_keres(r, m[1].gyakorisag + m[0].gyakorisag, m[1].gyakorisag, m[0].gyakorisag, m[1].betu, m[0].betu);
-
-    
+    r = uj_adatpont(r, m[1].gyakorisag, m[0].gyakorisag, m[0].betu);
     return r;
 }
+
 
 int main(void){
     Gyakorisag elofordulasok[] =
     {
-        {'a', 1},
-        {'b', 1},
-        {'c', 1},
-        {'d', 1},
-        {'e', 1}
+        {'a', 7},
+        {'b', 2}
     };
-    int meret = 5;
+    int meret = 2;
     rendezes_struct(elofordulasok, meret);
-    Binfa *fa = rekurziv_tomb_osszeg(elofordulasok, meret);
-    printf("================================\n");
-    sorban_kiir(fa);
-    free(fa);
+    sorban_kiir(rekurziv_tomb_osszeg(elofordulasok, meret));
 }

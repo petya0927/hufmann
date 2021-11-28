@@ -6,6 +6,7 @@
 typedef struct Binfa {
     int szam;
     char betu;
+    char *ut;
     struct Binfa *jobb, *bal;
 } Binfa;
 
@@ -73,7 +74,7 @@ void sorban_kiir(Binfa *gyoker) {
         return;
     }
 
-    printf("%c%d\n", gyoker->betu, gyoker->szam);
+    printf("%c %d %s\n", gyoker->betu, gyoker->szam, gyoker->ut);
     printf("bal\n");
     sorban_kiir(gyoker->bal);
     printf("jobb\n");
@@ -90,6 +91,7 @@ Binfa *lefoglal(int szam){
     Binfa *uj = (Binfa*) malloc(sizeof(Binfa));
     uj->szam = szam;
     uj->betu = (char) 0;
+    uj->ut = (char*) 0;
     uj->bal = uj->jobb = NULL;
     return uj;
 }
@@ -98,68 +100,66 @@ bool level(Binfa *gyoker){
     return gyoker->bal == NULL && gyoker->jobb == NULL;
 }
 
-Binfa *faban_van(Binfa *gyoker, int n){
-    if (gyoker == NULL)
-        return NULL;
-
-    if (gyoker->szam = n)
-        return gyoker;
-
-    Binfa *b = faban_van(gyoker->bal, n);
-    if (b != NULL) return b;
-    Binfa *j = faban_van(gyoker->jobb, n);
-    return j;
+int index_keres(Gyakorisag *t, char c){
+    int meret = sizeof(t) / sizeof(t[0]);
+    int i = 0;
+    while (i < meret && t[i].betu != c)
+        i++;
+    return (i == meret ? -1 : i);
 }
 
-Binfa *osszeg_keres(Binfa *gyoker, int osszeg, int a, int b, char ca, char cb){
-    printf("====================================\n");
-    printf("#ELOTTE:\n");
+char *tomb_megnovel(char *t){
+    int meret = sizeof(t) / sizeof(t[0]);
+    char *uj = (char*) malloc((meret + 2) * sizeof(char));
+    return uj;
+}
+
+Binfa *beszur(Binfa *gyoker, int osszeg, int a, int b, char ca, char cb){
     if (gyoker == NULL)
         return NULL;
 
-    printf("#Vizsgalt:%d, level:%d, a:%d, ca:%c, b:%d, cb:%c\n", gyoker->szam, level(gyoker), a, b, ca, cb);
-    sorban_kiir(gyoker);
-
-    // akkor hívom ha levél és kétféle képpen tudok visszatérni, azonos az érték, vbagy nem azonos az érték
-    if (level(gyoker)){
-        printf("#LEVEL\n");
-        if (gyoker->szam == osszeg){
-            printf("#EGYENLO\n");
-            printf("#BEILLESZTES\n");
+    if (level(gyoker)){        
+        if (gyoker->szam == osszeg && gyoker->betu == '\0'){
             gyoker->jobb = lefoglal(a);
             gyoker->jobb->betu = ca;
+            if (gyoker->ut == NULL)
+                gyoker->jobb->ut = "1";
+            else{
+                gyoker->jobb->ut = tomb_megnovel(gyoker->jobb->ut);
+                strcpy(gyoker->jobb->ut, gyoker->ut);
+                gyoker->jobb->ut = strcat(gyoker->jobb->ut, "1");
+            }
+
+
             gyoker->bal = lefoglal(b);
             gyoker->bal->betu = cb;
-            printf("UTANA:\n");
-            sorban_kiir(gyoker);
+            if (gyoker->ut == NULL)
+                gyoker->bal->ut = "0";
+            else{
+                gyoker->bal->ut = tomb_megnovel(gyoker->bal->ut);
+                strcpy(gyoker->bal->ut, gyoker->ut);
+                gyoker->bal->ut = strcat(gyoker->bal->ut, "0");
+            }
             return gyoker;
         }
-        else{
-            printf("#NEM EGYENLO");
+        else
             return NULL;
-        }
     }
 
-    else{
-        printf("#NEM LEVEL\n");
-        if (!osszeg_keres(gyoker->bal, osszeg, a, b, ca, cb)){
-            printf("#gyoker->bal = NULL\n");
-            if (!osszeg_keres(gyoker->jobb, osszeg, a, b, ca, cb))
+    else
+        if (!beszur(gyoker->bal, osszeg, a, b, ca, cb))
+            if (!beszur(gyoker->jobb, osszeg, a, b, ca, cb))
                 return NULL;
-        }
-    }
 
     return gyoker;
 }
 
-Binfa *rekurziv_tomb_osszeg(Gyakorisag *n, int meret){
-    for (int i = 0; i < meret; i++)
-        printf("%c%d ", n[i].betu, n[i].gyakorisag);
-    printf("\n");
+Binfa *rekurziv_tomb(Gyakorisag *n, int meret){
     if (meret == 1){
         Binfa *fa = NULL;
         fa = lefoglal(n[0].gyakorisag);
         fa->betu = n[0].betu;
+        fa->ut = NULL;
         return fa;
     }
     
@@ -173,26 +173,117 @@ Binfa *rekurziv_tomb_osszeg(Gyakorisag *n, int meret){
     meret -= 1;
     n = rendezes_struct(n, meret);
 
-    Binfa *r = rekurziv_tomb_osszeg(n, meret);
-    r = osszeg_keres(r, m[1].gyakorisag + m[0].gyakorisag, m[1].gyakorisag, m[0].gyakorisag, m[1].betu, m[0].betu);
-
+    Binfa *r = rekurziv_tomb(n, meret);
+    r = beszur(r, m[1].gyakorisag + m[0].gyakorisag, m[1].gyakorisag, m[0].gyakorisag, m[1].betu, m[0].betu);
     
     return r;
 }
 
+void kodok_fileba(Binfa *gyoker, FILE *f){
+    if (gyoker == NULL)
+        return;
+
+    if (level(gyoker)){
+        /*https://stackoverflow.com/questions/29087129/how-to-calculate-the-length-of-output-that-sprintf-will-generate*/
+        int meret = snprintf(NULL, 0, "%c%s\n", gyoker->betu, gyoker->ut, 'a');
+        char *fajlba = (char*) malloc(meret + 1);
+        sprintf(fajlba, "%c%s\n", gyoker->betu, gyoker->ut, 'a');
+        fwrite(fajlba, sizeof(fajlba), sizeof(fajlba), f);
+        free(fajlba);
+    }
+
+    kodok_fileba(gyoker->jobb, f);
+    kodok_fileba(gyoker->bal, f);
+}
+
+int fajlmeret(FILE *fajlp){
+    fseek(fajlp, 0, SEEK_END);          /* A fájlmutatót a pointer végére mozgatja a fájlméret meghatározásához*/
+    int fajlmeret = ftell(fajlp);   
+    fseek(fajlp, 0, SEEK_SET);          /* A fájlmutatót a fájl elejére mozgatja a fájl beolvasásához */
+    return fajlmeret;
+}
+
+void faban_keres(Binfa *gyoker, char c){
+    if (gyoker == NULL)
+        return;
+
+    if (gyoker->betu == c){
+        printf("%s", gyoker->ut);
+        return;
+    }
+    
+    faban_keres(gyoker->bal, c);
+    faban_keres(gyoker->jobb, c);
+    
+    return;
+
+}
+
+Gyakorisag *gyak_szamol(char *szoveg){
+    if (szoveg == NULL)
+        return NULL;
+
+    int meret = strlen(szoveg);
+    int beolvasva = -1;
+    int *elofordulas = (int*) malloc(meret * sizeof(int));              /* Lefoglal a memóriában egy helyet az elofordulasok tarolasara */
+
+    /* Végigiterál a szövegen és ha azonos betűk vannak, a számlálóhoz ad egyet*/
+    for (int i = 0; i < meret; i++){
+        int szamol = 1;
+        for (int j = i + 1; j < meret; j++){
+            if (szoveg[i] == szoveg[j]){
+                szamol++;
+                elofordulas[j] = -1;                    /* Ha azonos betűt talált, jelzi, hogy ne számoljuk meg újra */
+            }
+        }
+
+        if (elofordulas[i] != -1)
+            elofordulas[i] = szamol;                    /* Eltárolja a gyakoriságot */
+    }
+
+    int j = 0;
+    Gyakorisag *cel = (Gyakorisag*) malloc(sizeof(Gyakorisag));         /*Lefoglal egy területet a végelges tömbnek*/
+
+    for (int i = 0; i < meret; i++){
+        if (elofordulas[i] != -1){
+            Gyakorisag *uj = (Gyakorisag*) malloc((j + 1) * sizeof(Gyakorisag));         /* Lefoglal egyel nagyobb tömböt a gyakoriságok tárolására */
+            for (int k = 0; k < j; ++k)
+                uj[k] = cel[k];                     /* Átmásolja az eddigi elemeket az új tömbbe*/
+            free(cel);
+            cel = uj;
+            cel[j].betu = szoveg[i];                /* Eltárolja a karaktert*/
+            cel[j].gyakorisag = elofordulas[i];     /* Eltárolja a karakter előfordulásának számát */
+            j++;
+        }
+    }
+
+    for (int i = 0; i < meret; i++)
+        printf("%c %d\n", cel[i].betu, cel[i].gyakorisag);
+    return cel;
+}
+
 int main(void){
-    Gyakorisag elofordulasok[] =
-    {
-        {'a', 1},
-        {'b', 1},
-        {'c', 1},
-        {'d', 1},
-        {'e', 1}
-    };
-    int meret = 5;
+    /*Gyakorisag elofordulasok[] = {
+        {'a', 3},
+        {'l', 5},
+        {'m', 1},
+        {'f', 1}
+    };*/
+    char *szoveg = "almafallll\0";
+    Gyakorisag *elofordulasok = gyak_szamol(szoveg);
+    int meret = sizeof(elofordulasok) / sizeof(elofordulasok[0]);
+
     rendezes_struct(elofordulasok, meret);
-    Binfa *fa = rekurziv_tomb_osszeg(elofordulasok, meret);
-    printf("================================\n");
-    sorban_kiir(fa);
+    for (int i = 0; i < meret; i++)
+        printf("%c %d\n", elofordulasok[i].betu, elofordulasok[i].gyakorisag);
+
+    Binfa *fa = rekurziv_tomb(elofordulasok, meret);
+
+    FILE *fajl = fopen("tomoritett.hcf", "wb");
+    kodok_fileba(fa, fajl);
+    for (int i = 0; i < strlen(szoveg); i++)
+        faban_keres(fa, szoveg[i]);
+    fclose(fajl);
+
     free(fa);
 }

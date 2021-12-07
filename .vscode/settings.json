@@ -1,5 +1,10 @@
 {
     "files.associations": {
-        "funkciok.h": "c"
+        "funkciok.h": "c",
+        "file_kezeles.h": "c",
+        "betomorites.h": "c",
+        "cmath": "c",
+        "*.tcc": "c",
+        "binaris_fa.h": "c"
     }
 }

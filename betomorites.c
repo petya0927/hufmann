@@ -87,6 +87,8 @@ void tomorites(char *szoveg, char *kimeneti_fajl){
 
     FILE *fajl = fopen(kimeneti_fajl, "wb");
 
+    //fprintf(fajl, "%d", strlen(szoveg));
+    //fwrite("\n", sizeof(char), 1, fajl);
     kodok_fileba(fa, fajl);
     fwrite("\n", sizeof(char), 1, fajl);
 

@@ -7,7 +7,7 @@
 typedef struct Kod {
     char betu;
     int meret;
-    char *kod;
+    char kod[8];
 } Kod;
 
 typedef struct Binfa {
@@ -41,15 +41,16 @@ Kod *kodok_beolvas(char *s){
         strncpy(&kodok[k].betu, &s[i], 1);
         //printf("%c", kodok[k].betu);
 
-        kodok[k].kod = (char*) malloc(sizeof(char) * 8);
-        /// NEM NYÚLSZ HOZZÁ!!!
+        //kodok[k].kod = (char*) malloc(sizeof(char) * 8);
+        // NEM NYÚLSZ HOZZÁ!!!
         char byte = s[i + 2];
         char bitek[8];
         int j = 0;
         for (j = 0; j < 8 && j < s[i + 1] - '0'; j++)
             kodok[k].kod[j] = (byte & (maszk << (7 - j))) != 0;
+        kodok[k].kod[j + 1] = '\0';
         kodok[k].meret = j;
-        /// NEM NYÚLSZ HOZZÁ!!!
+        // NEM NYÚLSZ HOZZÁ!!!
 
         i += 3;
         k++;
@@ -77,25 +78,73 @@ char *tomoritett_szoveg_beolvas(char *s, int meret){
     return t;
 }
 
-void dekodol(Kod *kod_tabla, char *s, int meret){
-    char *t = malloc(sizeof(char));
-    for (int i = 0; i < meret; i++){
-        t[i] = s[i];
-        
-        for (int j = 0; j < meret; j++)
-            if (strcmp(kod_tabla[j].kod, t) == 0){
-                printf("%c", kod_tabla[j].betu);
-                t = '\0';
+void dekodol(Kod *kod_tabla, int k_meret, char *s, int s_meret){
+
+    char *t = (char*) malloc(sizeof(char) + 1);
+    t[0] = '\0';
+    int k = 0;
+    bool talalt = false;
+
+    for (int i = 0; i < s_meret; i++){
+
+        talalt = false;
+        t[k] = s[i];
+        t[k + 1] = '\0';
+        /*
+        for (int j = 0; j < strlen(t); j++)
+            printf("%d", t[j]);
+        printf("k:%d t[k]:%d\n", k, t[k]);
+        */
+
+        for (int j = 0; j < k_meret; j++){
+            //printf("vizsgalt betu: %c\n", kod_tabla[j].betu);
+            if ((strcmp(kod_tabla[j].kod, t) == 0) && (kod_tabla[j].meret == k + 1)){
+                printf("karakter: %c\n", kod_tabla[j].betu);
+                talalt = true;
                 break;
             }
-        
-        char *uj = (char*) malloc(sizeof(char) * (strlen(t) + 1));
-        for (int j = 0; j < strlen(t); j++)
-            uj[j] = t[j];
-        free(t);
-        t = uj;
-        
+        }
 
+        //printf("talalt: %d\n", talalt);
+
+        if (talalt){
+            //t = (char*) realloc(t, 1);
+            t[0] = '\0';
+            k = 0;
+            talalt = false;
+            //printf("\ntalalt es t uj meret: %d\n", strlen(t));
+        }
+        
+        else{
+            t = (char*) realloc(t, k + 2);
+            k++;
+            //printf("\nnem talalt es t uj meret: %d k: %d\n", k + 2, k);
+        }
+
+        /*
+        t[k] = s[i];
+        for (int j = 0; j < strlen(t); j++)
+            printf("%d", t[j]);
+
+        
+        for (int j = 0; j < k_meret; j++){
+            if (strcmp(kod_tabla[j].kod, t) == 0){
+                printf("talalt\n");
+                talalt = true;
+            }
+        }
+
+        if (talalt){
+            printf("talaltam, resetelem a kereso tombot\n");
+            t = realloc(t, sizeof(char));
+            k = 0;
+            talalt = false;
+        }
+        else{
+            t = realloc(t, sizeof(char) * (strlen(t) + 1));
+            k += 1;
+            printf("meg nem talaltam, tovabb megyek\n");
+        }*/
     }
 }
 
@@ -107,17 +156,15 @@ int main(){
     fread(file_be, sizeof(char), fmeret, fajl);
     Kod *kod_tabla = kodok_beolvas(file_be);
     char *tomoritett_szoveg = tomoritett_szoveg_beolvas(file_be, fmeret);
-    dekodol(kod_tabla, tomoritett_szoveg, strlen(tomoritett_szoveg) * 8);
-    /*
+    dekodol(kod_tabla, kod_tabla_meret(file_be), tomoritett_szoveg, strlen(tomoritett_szoveg) * 8);
     for (int i = 0; i < kod_tabla_meret(file_be); i++){
         printf("%c", kod_tabla[i].betu);
+        printf("%d", kod_tabla[i].meret);
         for (int j = 0; j < kod_tabla[i].meret; j++){
             printf("%d", kod_tabla[i].kod[j]);
         }
         printf("\n");
     }
-    */
-
     fclose(fajl);
     return 0;
 }

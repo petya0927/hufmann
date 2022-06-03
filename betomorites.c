@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
-
 #include "betomorites.h"
 #include "binaris_fa.h"
+#include "debugmalloc.h"
 
 /*
  * Funkció egy fájl létrehozására.
@@ -84,7 +84,6 @@ void tomorites(char *szoveg, char *kimeneti_fajl){
     rendezes_struct(elofordulasok, meret);
 
     Binfa *fa = rekurziv_tomb(elofordulasok, meret);
-
     FILE *fajl = fopen(kimeneti_fajl, "wb");
 
     //fprintf(fajl, "%d", strlen(szoveg));
@@ -92,14 +91,15 @@ void tomorites(char *szoveg, char *kimeneti_fajl){
     kodok_fileba(fa, fajl);
     fwrite("\n", sizeof(char), 1, fajl);
 
-    char *t = (char*) malloc(sizeof(char) * 1000);
+    char *t = (char*) malloc(sizeof(char) * 10000);
     *t = '\0';
     for (int i = 0; i < strlen(szoveg); i++){
         t = faban_keres(fa, szoveg[i], t, fajl);
     }
     binaris_fajl_ir(t, fajl);
     fclose(fajl);
-    free(fa);
+    free(t);
+    felszabadit(fa);
 }
 
 /*
@@ -118,7 +118,6 @@ void tomorites(char *szoveg, char *kimeneti_fajl){
  */
 void bemenet_eldont(char opcio, char *arg1, char *arg2, char *kimeneti_fajl){
     int meret = 0;
-
     switch (opcio){
         case 's':;                              /* Begépelt stringből várja a bementet */
             char *szoveg_be = arg1;
@@ -128,8 +127,10 @@ void bemenet_eldont(char opcio, char *arg1, char *arg2, char *kimeneti_fajl){
 
         case 'f':;                              /* Fileból várja a bemenetet */
             FILE *fajl_olv = fopen(arg1, "r");
-            if (fajl_olv == NULL)
-                printf("Nem sikerült megnyitni a fajlt, kilepes...");
+            if (fajl_olv == NULL){
+                perror("Nem sikerült megnyitni a fajlt, kilepes...");
+                return;
+            }
             char *fajl_be = fajl_olvas(fajl_olv);
             fclose(fajl_olv);
             fajl_ir("tomoritetlen.txt", fajl_be);
@@ -137,7 +138,7 @@ void bemenet_eldont(char opcio, char *arg1, char *arg2, char *kimeneti_fajl){
             break;
 
         default:;
-            printf("NINCS ELEG ARGUMENTUM");
+            printf("HIANYZO VAGY HIBAS ARGUMENTUM");
             break;
     }
 }

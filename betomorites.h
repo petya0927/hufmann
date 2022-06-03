@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "debugmalloc.h"
 
 typedef struct Gyakorisag {
     char betu;

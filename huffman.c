@@ -2,6 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include "betomorites.h"
+#include "kitomorites.h"
+#include "debugmalloc.h"
 
 /*
  * A használati útmutató megjelenítése, parancsok és beállítás opciók kiírása argumentumokkal.
@@ -22,11 +24,11 @@ void help_screen(){
            "SEGITSEG:\n\t-h: kiirja ezt a szoveget\n");
 }
 
-int main(int argc, char *argv[]) {
+void main(int argc, char *argv[]) {
 
     if (argv[1] == NULL){
         help_screen();
-        return 0;
+        return;
     }
 
     char *kimeneti_file = "tomoritett.hcf";
@@ -34,40 +36,31 @@ int main(int argc, char *argv[]) {
         if (strcmp(argv[3], "-o") == 0)
             kimeneti_file = argv[4];
         else{
-            printf("HIBAS ARGUMENTUM, KILEPES...");
-            abort();
+            perror("HIANYZO VAGY HIBAS ARGUMENTUM");
+            return;
         }
     }
     else if (argv[4] == NULL){
-        printf("HIANYZO ARGUMENTUM, KILEPES...");
-        abort();
+        perror("HIANYZO VAGY HIBAS ARGUMENTUM");
+        return;
     }
 
     switch (argv[1][1]){
-        case 'i':
+        case 'i':;
             bemenet_eldont(argv[1][2], argv[2], argv[3], kimeneti_file);
             break;
 
-        case 'r':
-            printf("VISSZAALLITAS\n");
-            switch (argv[1][2]){
-                case 's':
-                    printf("STRING\n");
-                    break;
-                case 'f':
-                    printf("FILE\n");
-                    break;
-                default:
-                    printf("NINCS ELÉG ARGUMENTUM");
-                    break;
-            }
+        /*
+        case 'r':;
+            kitomorit(argv[1][2], argv[2], argv[3]);
             break;
+        */
 
-        case 'h':
-        default:
+        case 'h':;
+        default:;
             help_screen();
             break;
     }
 
-    return 0;
+    return;
 }

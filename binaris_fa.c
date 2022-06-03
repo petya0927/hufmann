@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "binaris_fa.h"
+//#include "debugmalloc.h"
 
 Gyakorisag *rendezes_struct(Gyakorisag *t, int meret){
     for (int i = 0; i < meret - 1; ++i) {
@@ -77,7 +78,7 @@ Binfa *beszur(Binfa *gyoker, int a, int b, char ca, char cb){
                 gyoker->jobb->ut = "1";
 
             else{
-                gyoker->jobb->ut = tomb_megnovel(gyoker->jobb->ut);
+                gyoker->jobb->ut = (char*) malloc(sizeof(char) * (strlen(gyoker->ut) + 2));
                 strcpy(gyoker->jobb->ut, gyoker->ut);
                 gyoker->jobb->ut = strcat(gyoker->jobb->ut, "1");
             }
@@ -89,7 +90,7 @@ Binfa *beszur(Binfa *gyoker, int a, int b, char ca, char cb){
                 gyoker->bal->ut = "0";
 
             else{
-                gyoker->bal->ut = tomb_megnovel(gyoker->bal->ut);
+                gyoker->bal->ut = (char*) malloc(sizeof(char) * (strlen(gyoker->ut) + 2));
                 strcpy(gyoker->bal->ut, gyoker->ut);
                 gyoker->bal->ut = strcat(gyoker->bal->ut, "0");
             }
@@ -128,7 +129,7 @@ Binfa *rekurziv_tomb(Gyakorisag *n, int meret){
 
     Binfa *r = rekurziv_tomb(n, meret);
     r = beszur(r, m[1].gyakorisag, m[0].gyakorisag, m[1].betu, m[0].betu);
-    
+    free(m);
     return r;
 }
 
@@ -164,6 +165,15 @@ void kodok_fileba(Binfa *gyoker, FILE *f){
 
     kodok_fileba(gyoker->jobb, f);
     kodok_fileba(gyoker->bal, f);
+}
+
+void felszabadit(Binfa *gyoker) {
+    if (gyoker == NULL)
+        return;
+    
+    felszabadit(gyoker->bal);
+    felszabadit(gyoker->jobb);
+    free(gyoker);
 }
 
 char *faban_keres(Binfa *gyoker, char c, char *t, FILE *f){
@@ -209,13 +219,13 @@ Gyakorisag* gyak_szamol(char *szoveg, int *cel_meret){
             Gyakorisag *uj = (Gyakorisag*) malloc((j + 1) * sizeof(Gyakorisag));         /* Lefoglal egyel nagyobb tömböt a gyakoriságok tárolására */
             for (int k = 0; k < j; ++k)
                 uj[k] = cel[k];                     /* Átmásolja az eddigi elemeket az új tömbbe*/
-            free(cel);
             cel = uj;
             cel[j].betu = szoveg[i];                /* Eltárolja a karaktert*/
             cel[j].gyakorisag = elofordulas[i];     /* Eltárolja a karakter előfordulásának számát */
             j++;
         }
     }
+    free(elofordulas);
 
     *cel_meret = j;
 

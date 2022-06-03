@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdbool.h>
+#include "debugmalloc.h"
 
 typedef struct Kod {
     char betu;
@@ -78,7 +79,7 @@ char *tomoritett_szoveg_beolvas(char *s, int meret){
     return t;
 }
 
-void dekodol(Kod *kod_tabla, int k_meret, char *s, int s_meret){
+char *dekodol(Kod *kod_tabla, int k_meret, char *s, int s_meret){
 
     char *t = (char*) malloc(sizeof(char) + 1);
     t[0] = '\0';
@@ -90,73 +91,66 @@ void dekodol(Kod *kod_tabla, int k_meret, char *s, int s_meret){
         talalt = false;
         t[k] = s[i];
         t[k + 1] = '\0';
-        /*
-        for (int j = 0; j < strlen(t); j++)
+        
+        
+        for (int j = 0; j < k; j++)
             printf("%d", t[j]);
         printf("k:%d t[k]:%d\n", k, t[k]);
-        */
+        
 
         for (int j = 0; j < k_meret; j++){
-            //printf("vizsgalt betu: %c\n", kod_tabla[j].betu);
-            if ((strcmp(kod_tabla[j].kod, t) == 0) && (kod_tabla[j].meret == k + 1)){
+            printf("vizsgalt betu: %c\n", kod_tabla[j].betu);
+            if ((strncmp(kod_tabla[j].kod, t, kod_tabla[j].meret) == 0) && (kod_tabla[j].meret == k + 1)){
                 printf("karakter: %c\n", kod_tabla[j].betu);
                 talalt = true;
                 break;
             }
         }
 
-        //printf("talalt: %d\n", talalt);
+        printf("talalt: %d\n", talalt);
 
         if (talalt){
             //t = (char*) realloc(t, 1);
             t[0] = '\0';
             k = 0;
             talalt = false;
-            //printf("\ntalalt es t uj meret: %d\n", strlen(t));
         }
         
         else{
             t = (char*) realloc(t, k + 2);
             k++;
-            //printf("\nnem talalt es t uj meret: %d k: %d\n", k + 2, k);
         }
-
-        /*
-        t[k] = s[i];
-        for (int j = 0; j < strlen(t); j++)
-            printf("%d", t[j]);
-
-        
-        for (int j = 0; j < k_meret; j++){
-            if (strcmp(kod_tabla[j].kod, t) == 0){
-                printf("talalt\n");
-                talalt = true;
-            }
-        }
-
-        if (talalt){
-            printf("talaltam, resetelem a kereso tombot\n");
-            t = realloc(t, sizeof(char));
-            k = 0;
-            talalt = false;
-        }
-        else{
-            t = realloc(t, sizeof(char) * (strlen(t) + 1));
-            k += 1;
-            printf("meg nem talaltam, tovabb megyek\n");
-        }*/
+        printf("\n");
     }
 }
 
+void kitomorit(char opcio, char *tomoritett_fajl, char *visszaallitott_fajl){
 
-int main(){
-    FILE *fajl = fopen("tomoritett.hcf", "rb");
+    FILE *fajl = fopen(tomoritett_fajl, "rb");
     int fmeret = fajlmeret(fajl);
     char *file_be = (char*) malloc(sizeof(char) * fmeret);
     fread(file_be, sizeof(char), fmeret, fajl);
+    fclose(fajl);
     Kod *kod_tabla = kodok_beolvas(file_be);
     char *tomoritett_szoveg = tomoritett_szoveg_beolvas(file_be, fmeret);
-    dekodol(kod_tabla, kod_tabla_meret(file_be), tomoritett_szoveg, strlen(tomoritett_szoveg) * 8);
+    char *visszaallitott_szoveg = dekodol(kod_tabla, kod_tabla_meret(file_be), tomoritett_szoveg, strlen(tomoritett_szoveg) * 8);
+
+    switch (opcio){
+        case 's':;
+            for (int i = 0; i < strlen(tomoritett_szoveg); i++)
+                printf("%c", tomoritett_szoveg[i]);
+            break;
+
+        case 'f':;
+            FILE *fajl_ki = fopen(visszaallitott_fajl, "w");
+            fwrite(visszaallitott_szoveg, sizeof(char), strlen(visszaallitott_szoveg), fajl_ki);
+            fclose(fajl_ki);
+        
+        default:
+            perror("HIANYZO VAGY HIBAS ARGUMENTUM");
+            break;
+        }
+
     for (int i = 0; i < kod_tabla_meret(file_be); i++){
         printf("%c", kod_tabla[i].betu);
         printf("%d", kod_tabla[i].meret);
@@ -165,6 +159,4 @@ int main(){
         }
         printf("\n");
     }
-    fclose(fajl);
-    return 0;
 }

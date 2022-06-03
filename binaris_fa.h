@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "betomorites.h"
+#include "debugmalloc.h"
 
 typedef struct Binfa{
     int szam;
@@ -17,6 +18,8 @@ typedef struct Binfa{
 Binfa *lefoglal(int szam);
 
 void sorban_kiir(Binfa *gyoker);
+
+void felszabadit(Binfa *gyoker);
 
 bool level(Binfa *gyoker);
 
